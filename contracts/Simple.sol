@@ -62,8 +62,4 @@ contract Simple {
     {
     }
 
-
-
-
-
 }
