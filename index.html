@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CONNECTION TO METAMASK</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+    body {
+        background-color: #f2f2f2;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #cccccc;
+    }
+
+    .btn {
+        display: inline-block;
+        background-color: #4CAF50;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-secondary {
+        background-color: #808080;
+    }
+
+    .campaign-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+    }
+
+    .campaign-table th,
+    .campaign-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #dddddd;
+    }
+
+    .campaign-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+</style>
+
+<body>
+    <button onclick="connectMetamask()">CONNECT TO METAMASK</button>
+    <br>
+    <p id="accountArea"></p>
+    <button onclick="connectContract()">CONNECT TO CONTRACT</button>
+    <br>
+    <p id="contractArea"></p>
+    <button onclick="readContract()">GET DATA FROM CONTRACT</button>
+    <br>
+    <p id="dataArea"></p>
+
+    
+
+    <div class="container">
+        <h1>Campaign Management</h1>
+
+        <form>
+            <div class="form-group">
+                <label for="campaignName">Campaign Name</label>
+                <input type="text" id="campaignName" placeholder="Enter campaign name">
+            </div>
+            <div class="form-group">
+                <label for="campaignDescription">Campaign Description</label>
+                <input type="text" id="campaignDescription" placeholder="Enter campaign description">
+            </div>
+            <div class="form-group">
+                <label for="campaignGoal">Goal</label>
+                <input type="text" id="campaignGoal" placeholder="Enter goal amount">
+            </div>
+            <div class="form-group">
+                <label for="campaignRaised">Amount Raised</label>
+                <input type="text" id="campaignRaised" placeholder="Enter amount raised" disabled>
+            </div>
+            
+            <div class ="form-group">
+                <label for="CampaignId">Campaign ID</label>
+                <input type="text" id="campaignid" placeholder="Enter Campaign ID" disabled>                  
+            </div>
+
+            <button onclick="addCampaign(event)" type="submit" class="btn">Add Campaign</button>
+            <br><br>
+            
+
+        </form>
+        <button onclick="listAllCampaigns()" class="btn btn-secondary">List All Campaigns</button>
+        <br>
+
+        <table class="campaign-table" id="campaignListTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Goal</th>
+                    <th>Raised</th>
+                    <th>Id</th>
+                </tr>
+            </thead>
+            <tbody id="campaignListBody"></tbody>
+        </table>
+    </div>
+    <br><br
+    >
+    <div class="container">
+        <form>
+            <div class="form-group">
+                <label for="campaignId">Campaign ID</label>
+                <input type="text" id="campaignId" placeholder="Enter campaign ID">
+            </div>
+            <div class="form-group">
+                <label for="contributionAmount">Contribution Amount</label>
+                <input type="text" id="contributionAmount" placeholder="Enter contribution amount">
+            </div>
+            <button onclick="fundCampaign(event)" type="submit" class="btn">Fund Campaign</button>
+        </form>
+    </div>
+</body>
+
+    <script>
+
+
+        //1- connect metamask
+        let account;
+        const connectMetamask = async () => {
+            if(window.ethereum !== "undefined") {
+                const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                account = accounts[0];
+                document.getElementById("accountArea").innerHTML = account;
+            }
+        }
+
+        //2- connect to smart contract
+        const connectContract = async () => {
+            const ABI = [
+                            {
+                                "inputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "constructor"
+                            },
+                            {
+                                "anonymous": false,
+                                "inputs": [
+                                    {
+                                        "indexed": false,
+                                        "internalType": "string",
+                                        "name": "name",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "string",
+                                        "name": "decs",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "goal",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "raised",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "CampaignAdded",
+                                "type": "event"
+                            },
+                            {
+                                "anonymous": false,
+                                "inputs": [
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "campaignID",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "string",
+                                        "name": "name",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "fundedAmount",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "CampaignFunded",
+                                "type": "event"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "Campaigns",
+                                "outputs": [
+                                    {
+                                        "internalType": "string",
+                                        "name": "name",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "internalType": "string",
+                                        "name": "description",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "goal",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "raised",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "campaignID",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "CampaignsCount",
+                                "outputs": [
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "string",
+                                        "name": "name",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "internalType": "string",
+                                        "name": "desc",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "goal",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "raised",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "addCampaign",
+                                "outputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "campaignID",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "fundCampaign",
+                                "outputs": [],
+                                "stateMutability": "payable",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "id",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "getCampaign",
+                                "outputs": [
+                                    {
+                                        "components": [
+                                            {
+                                                "internalType": "string",
+                                                "name": "name",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "internalType": "string",
+                                                "name": "description",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "goal",
+                                                "type": "uint256"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "raised",
+                                                "type": "uint256"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "campaignID",
+                                                "type": "uint256"
+                                            }
+                                        ],
+                                        "internalType": "struct Simple.Campaign",
+                                        "name": "",
+                                        "type": "tuple"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "listAllCampaigns",
+                                "outputs": [
+                                    {
+                                        "components": [
+                                            {
+                                                "internalType": "string",
+                                                "name": "name",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "internalType": "string",
+                                                "name": "description",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "goal",
+                                                "type": "uint256"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "raised",
+                                                "type": "uint256"
+                                            },
+                                            {
+                                                "internalType": "uint256",
+                                                "name": "campaignID",
+                                                "type": "uint256"
+                                            }
+                                        ],
+                                        "internalType": "struct Simple.Campaign[]",
+                                        "name": "",
+                                        "type": "tuple[]"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            }
+                        ];
+
+            const Address = "0xF52f1973eaf14cD07f1EDe6bbB5076d649b7438a";
+            window.web3 = await new Web3(window.ethereum);
+            window.contract = await new window.web3.eth.Contract( ABI, Address); 
+            document.getElementById("contractArea").innerHTML = "connected to smart contract";
+        }
+
+        //3-read data from smart contract
+        const readContract = async () => {
+            // const data = await window.contract.methods.myCity().call();
+            // document.getElementById("dataArea").innerHTML = data;
+            const data = await window.contract.methods.CampaignsCount().call();
+            document.getElementById("dataArea").innerHTML = data;
+        }
+
+        //4- add campaign
+        const addCampaign = async () => {
+            event.preventDefault(); // Prevent form submission
+            const name = document.getElementById("campaignName").value;
+            const description = document.getElementById("campaignDescription").value;
+            const goal = document.getElementById("campaignGoal").value;
+            const raised = document.getElementById("campaignRaised").value;
+
+            await window.contract.methods.addCampaign(name, description, goal, raised).send({ from: account });
+            alert("Campaign added successfully!");
+        }
+
+        //5- list all campaigns
+        const listAllCampaigns = async () => {
+            const campaigns = await window.contract.methods.listAllCampaigns().call();
+
+            // Clear the table body
+            const campaignListBody = document.getElementById("campaignListBody");
+            campaignListBody.innerHTML = "";
+
+            // Iterate over the campaigns and append rows to the table
+            campaigns.forEach(campaign => 
+            {
+                const row = campaignListBody.insertRow();
+                row.innerHTML = `
+                    <td>${campaign.name}</td>
+                    <td>${campaign.description}</td>
+                    <td>${campaign.goal}</td>
+                    <td>${campaign.raised}</td>
+                    <td>${campaign.campaignID}</td>
+                `;
+            });
+        }
+        const fundCampaign = async () => {
+            event.preventDefault(); // Prevent form submission
+                    
+            const campaignId = document.getElementById("campaignId").value;
+            const contributionAmount = document.getElementById("contributionAmount").value;
+            const contributionAmountWei = window.web3.utils.toWei(contributionAmount, "ether");
+            
+            // Retrieve campaign information
+            const campaign = await window.contract.methods.getCampaign(campaignId).call();
+            const goalReached = campaign.raised >= campaign.goal;
+            
+            if (goalReached) 
+            {
+                alert("Campaign goal has already been achieved. No more contributions can be made.");
+                return;
+            }
+            
+            await window.contract.methods.fundCampaign(campaignId).send({ from: account, value: contributionAmountWei });
+            alert("Campaign funded successfully!");
+        }
+
+
+
+        const test_fundCampaign = async () => {
+         
+            await window.contract.methods.test_fundCampaign().call();
+        }
+
+        // Run the functions when the page loads
+        window.onload = async () => {
+            await connectMetamask();
+            // await connectContract();
+            // await readContract();
+            await listAllCampaigns();
+        };
+    </script>
+</body>
+</html>
