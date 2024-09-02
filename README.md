@@ -19,11 +19,11 @@ The fundCampaign function allows users to contribute funds to a specific campaig
 
 Overall, this contract provides basic functionality for creating, listing, and funding crowdfunding campaigns. Please note that additional functions, modifiers, or contract logic can be added based on the specific requirements of your application.
 
-#NOTE
-The overall project was made in truffle enviroment. SO in order to run this code in truffle. 
+# NOTE
+The overall project was made in truffle enviroment. So in order to run this code in truffle. 
 
-1 truffle init - create a new truffle project
-2 replace the migrations contracts test folders by the existing folders in this repository
-3 Add the html and server.js file in the directory too it will laucnh the User Interface on localhost port 50000
-4 to run the UI just type " node server.js "
-5 then goto the browser and type http://127.0.0.1:5000
+1. truffle init - create a new truffle project
+2. replace the migrations contracts test folders by the existing folders in this repository
+3. Add the html and server.js file in the directory too it will laucnh the User Interface on localhost port 50000
+4. to run the UI just type " node server.js "
+5. then goto the browser and type http://127.0.0.1:5000
